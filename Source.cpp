@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <string>
+#include <cmath>
 using namespace std;
 
 	
@@ -8,14 +10,14 @@ template <class type>
 class BigInteger
 {
 private:
-	const type base = 1 << sizeof(type) * 4;
-	const type max = base - 1;
+	const size_t base = 1000000000;
+	const unsigned short max_digits = 5;//ceil(log10(sqrt(base)));
 	vector<type> digits;
 
 public:
 	BigInteger()
 	{
-		this->digits.push_back(0);
+		
 	}
 
 	BigInteger& operator= (const BigInteger& another)
@@ -52,7 +54,7 @@ public:
 	BigInteger operator +(const BigInteger& another)
 	{
 		BigInteger copy = *this;
-		return copy;
+		return copy += another;
 	}
 
 	template <class type>
@@ -65,37 +67,30 @@ public:
 template <class type>
 istream& operator >>(istream& in, BigInteger<type>& object)
 {
-	object.digits.clear();
-	for (char ch = in.get(); ch != '\n'; ch = in.get())
+	string input;
+	in >> input;
+	//мне нужно уходить в отрицательные числа поэтому long long, а size_t - самый большой тип после long long
+	for (long long i = static_cast<long long>(input.size()) - object.max_digits; ; i -= object.max_digits)
 	{
-		object.digits.push_back(ch - '0');
-	}
-	size_t size = object.digits.size();
-	//i was doing it at 4 am and i suspect i wanted to do conversion from decimal to my base numerical system 
-	for (size_t i = 1; i < size; i++) //what is this?
-	{
-		for (size_t j = i; j > 0 && object.digits[j - 1] < object.max; j--)
+		if (i >= 0)
 		{
-			if (object.max - object.digits[j - 1] >= object.digits[j])
-			{
-				object.digits[j - 1] += object.digits[j];
-				object.digits[j] = 0;
-			}
-			else
-			{
-				object.digits[j - 1] += min(object.max - object.digits[j - 1], object.digits[j]);
-				object.digits[j] -= min(object.max - object.digits[j - 1], object.digits[j]);
-			}
+			object.digits.push_back(stoull(input.substr(i, object.max_digits)));
+		}
+		else 
+		{
+			if (object.max_digits + i != 0)
+				object.digits.push_back(stoull(input.substr(0, object.max_digits + i)));
+			break;
 		}
 	}
+
 	return in;
 }
 
 template <class type>
 ostream& operator <<(ostream& out, const BigInteger<type>& object)
 {
-	for (vector<type>::const_reverse_iterator i = object.digits.rbegin(); i != object.digits.rend(); i++)
-		out << *i;
+
 	return out;
 }
 
